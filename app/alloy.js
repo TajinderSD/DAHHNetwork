@@ -9,3 +9,4 @@
 // object. For example:
 //
 // Alloy.Globals.someGlobalFunction = function(){};
+var Cloud = require('ti.cloud');

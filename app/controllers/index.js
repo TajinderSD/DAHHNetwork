@@ -3,7 +3,8 @@
 
 var activityIndicator = Ti.UI.createActivityIndicator({
 	message : 'Checking services...',
-	color : 'red'
+	color : 'red',
+	top: 50
 });
 
 $.index.add(activityIndicator);
@@ -110,7 +111,8 @@ function createGeolocation(latitude, longitude) {
 	}, function(e) {
 		if(e.success) {
 			activityIndicator.hide();
-			openPeopleNearby([latitude, longitude]);
+			$.index.remove(activityIndicator);
+			searchPeopleNearby([latitude, longitude]);
 		} else {
 			alert('Error:\n' + ((e.error && e.message) || JSON.stringify(e)));
 		}
@@ -128,7 +130,8 @@ function updateGeolocation(gid, coordinates) {
 	}, function(e) {
 		if(e.success) {
 			activityIndicator.hide();
-			openPeopleNearby(coordinates);
+			$.index.remove(activityIndicator);
+			searchPeopleNearby(coordinates);
 		} else {
 			alert('Error:\n' + ((e.error && e.message) || JSON.stringify(e)));
 		}
@@ -138,4 +141,98 @@ function updateGeolocation(gid, coordinates) {
 function openPeopleNearby(coordinates) {
 	var peopleNearbyWin = Alloy.createController('peopleNearby', [coordinates]).getView();
 	peopleNearbyWin.open();
+}
+
+function searchPeopleNearby(coordinates) {
+	var activityInd = Ti.UI.createActivityIndicator({
+		message : 'Searching people nearby...',
+		color : 'red',
+		top: 50
+	});
+
+	$.index.add(activityInd);
+	activityInd.show();
+
+	Cloud.Objects.query({
+		classname: 'geolocation',
+			where: {
+				//user_id : {"$ne": user_id}
+				coordinates: {
+					"$nearSphere": [coordinates[0], coordinates[1]],
+					"$maxDistance": 5/3959 
+				}
+			}
+		}, function(e){
+			if(e.success) {
+				var geolocations = e.geolocation;
+				
+				var tableData = [];
+				for(count = 0; count < geolocations.length; count++) {
+					var geolocation = geolocations[count];
+					
+					var row = Ti.UI.createTableViewRow({
+						selectedBackgroundColor: '#222',
+						height: 70,
+						touchEnabled: true,
+						user_id: geolocation.user_id,
+						is_anon_user: geolocation.is_anon_user
+					});
+					
+					var image = Ti.UI.createImageView({
+					    image: '',
+					    left:70, bottom: 2,
+					    width:32, height: 32
+					  });
+					  
+					row.add(image);
+	  
+					var row_label = Ti.UI.createLabel({
+						color:'#576996',
+						text: geolocation.is_anon_user ? 'Anon' : geolocation.first_name,
+						font: {fontFamily: 'Arial', fontSize: 16, fontWeight: 'bold'}
+					});
+					
+					row.add(row_label);
+					
+					tableData.push(row);
+				}
+				
+				var header = Ti.UI.createView({
+				    backgroundColor: '#222',
+        			height: 60,
+        			width: Ti.UI.FILL,
+        			top: 0
+				});
+				var text = Ti.UI.createLabel({
+			        text: 'People Nearby',
+			        left: 20,
+			        color: '#fff',
+			        font: {fontFamily: 'Arial', fontSize: 20}
+			    });
+    			header.add(text);
+				
+				var tableView = Ti.UI.createTableView({
+					backgroundColor: 'white',
+					data: tableData,
+					headerView: header
+				});
+				
+				tableView.addEventListener('click', function(e){
+					if(e.rowData.is_anon_user) {
+						alert('Please register to view details');
+					} else {
+						alert(e.rowData.user_id);
+					}
+				});
+				
+				activityInd.hide();
+				$.index.remove(activityInd);
+				$.index.add(header);
+				$.index.add(tableView);
+			} else {
+				activityInd.hide();
+				$.index.remove(activityInd);
+				alert('Error:\n' + ((e.error && e.message) || JSON.stringify(e)));
+			}
+	});
 }

@@ -33,6 +33,8 @@
     <android xmlns:android="http://schemas.android.com/apk/res/android">
     	
     	<manifest>
+    		<application android:theme="@android:style/Theme.Holo.Light"/>
+    		<supports-screens android:anyDensity="false"/>
     		<!-- Allows the API to download data from Google Map servers -->
             <uses-permission android:name="android.permission.INTERNET"/>
             <!-- Allows the API to cache data -->

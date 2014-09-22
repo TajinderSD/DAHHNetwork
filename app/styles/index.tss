@@ -11,4 +11,7 @@
 	font: {
 		fontSize: 12
 	}
+},
+"Window": {
+    navBarHidden: true
 }

@@ -1,5 +1,5 @@
 <Alloy>
-	<Window class="container">
+	<Window class="container" layout="vertical">
 		
 	</Window>
 </Alloy>

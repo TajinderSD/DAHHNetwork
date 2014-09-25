@@ -63,13 +63,18 @@ function loginUser(email, password) {
 }
 
 function getGeolocation() {
-	gpsProvider = Ti.Geolocation.Android.createLocationProvider({
-		name: Ti.Geolocation.PROVIDER_GPS,
-		minUpdateDistance: 100,
-		minUpdateTime: 60
-	});
+	// gpsProvider = Ti.Geolocation.Android.createLocationProvider({
+		// name: Ti.Geolocation.PROVIDER_GPS,
+		// minUpdateDistance: 100,
+		// minUpdateTime: 60
+	// });
+// 	
+	// Ti.Geolocation.Android.addLocationProvider(gpsProvider);
 	
-	Ti.Geolocation.Android.addLocationProvider(gpsProvider);
+	// Ti.Geolocation.preferredProvider = "gps";
+	// Ti.Geolocation.purpose = "GPS demo";
+	Titanium.Geolocation.accuracy = Titanium.Geolocation.ACCURACY_BEST;
+	Titanium.Geolocation.distanceFilter = 10;
 	Ti.Geolocation.getCurrentPosition(currentPositionCallback);
 }
 
@@ -156,7 +161,7 @@ function searchPeopleNearby(coordinates) {
 	Cloud.Objects.query({
 		classname: 'geolocation',
 			where: {
-				//user_id : {"$ne": user_id}
+				user_id : {"$ne": user_id},
 				coordinates: {
 					"$nearSphere": [coordinates[0], coordinates[1]],
 					"$maxDistance": 5/3959 
@@ -180,15 +185,18 @@ function searchPeopleNearby(coordinates) {
 					
 					var image = Ti.UI.createImageView({
 					    image: '',
-					    left:70, bottom: 2,
-					    width:32, height: 32
+					    left:70,
+					    bottom: 2,
+					    width:32,
+					    height: 32,
+					    layout: 'horizontal'
 					  });
 					  
 					row.add(image);
 	  
 					var row_label = Ti.UI.createLabel({
 						color:'#576996',
-						text: geolocation.is_anon_user ? 'Anon' : geolocation.first_name,
+						text: geolocation.first_name,
 						font: {fontFamily: 'Arial', fontSize: 16, fontWeight: 'bold'}
 					});
 					
@@ -209,7 +217,22 @@ function searchPeopleNearby(coordinates) {
 			        color: '#fff',
 			        font: {fontFamily: 'Arial', fontSize: 20}
 			    });
+			    var map_pin = Ti.UI.createButton({
+			    	image: '/images/map_pin_2.png',
+			    	borderRadius: 5,
+			    	top: 5,
+			    	left: 250,
+  					width:Ti.UI.SIZE,
+        			height:Ti.UI.SIZE,
+  					verticalAlign: Ti.UI.TEXT_VERTICAL_ALIGNMENT_CENTER
+			    });
+			    map_pin.addEventListener('click', function(e) {
+			    	var peopleNearbyMapView = Alloy.createController('peopleNearbyMapView', {coordinates : coordinates, geolocations : geolocations}).getView();
+					peopleNearbyMapView.open();
+			    });
+			    
     			header.add(text);
+    			header.add(map_pin);
 				
 				var tableView = Ti.UI.createTableView({
 					backgroundColor: 'white',
@@ -235,4 +258,40 @@ function searchPeopleNearby(coordinates) {
 				alert('Error:\n' + ((e.error && e.message) || JSON.stringify(e)));
 			}
 	});
+}
+
+function mapWindow() {
+	var MapModule = require('ti.map');
+
+
+var win = Titanium.UI.createWindow();
+var mountainView = MapModule.createAnnotation({
+    latitude:37.390749,
+    longitude:-122.081651,
+    title:"Appcelerator Headquarters",
+    subtitle:'Mountain View, CA',
+    pincolor:MapModule.ANNOTATION_RED
+});
+
+var eentweedrie = MapModule.createAnnotation({
+    latitude:51.32811396764682,
+    longitude:3.850465540405268,
+    title:"school",
+    subtitle:'terneuzen',
+    pincolor:MapModule.ANNOTATION_RED
+});
+
+
+
+var mapview = MapModule.createView({
+    mapType: MapModule.NORMAL_TYPE,
+    region: {latitude:33.74511, longitude:-84.38993,
+            latitudeDelta:0.01, longitudeDelta:0.01},
+    animate:true,
+    regionFit:true,
+    userLocation:true,
+    annotations:[mountainView, eentweedrie]
+});
+win.add(mapview);
+win.open();
 }

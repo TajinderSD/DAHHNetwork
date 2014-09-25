@@ -10,3 +10,4 @@
 //
 // Alloy.Globals.someGlobalFunction = function(){};
 var Cloud = require('ti.cloud');
+Alloy.Globals.Map = require('ti.map');
